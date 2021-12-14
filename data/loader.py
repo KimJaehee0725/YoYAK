@@ -8,8 +8,9 @@ from torch.nn.utils.rnn import pad_sequence
 """
 todo 
 1. pad_sequence의 길이를 ToBigBird의 최대길이(4096)으로 맞추기 o
-2. SOS, EOS 토큰 위치 확인해서 넣기 (현재 맨 앞에 CLS 토큰(2)이 들어가고 있음) 
-3. iterabledataset multiprocessing 시 문제생기지 않는지 확인하기 o
+2. iterabledataset multiprocessing 시 문제생기지 않는지 확인하기 o
+3. SOS, EOS 토큰 위치 확인해서 넣기
+4. mask 토큰이 기존에는 token 단위인데, 우린 sentence 단위로 masking하고 있어서 다를 수 있음. 이를 해결하기 위해 새로운 토큰으로 mask_new 토큰을 만들어야 하는지 고민해보기. 
 """
 
 class iterableDataset(IterableDataset):
@@ -26,30 +27,31 @@ class iterableDataset(IterableDataset):
                 yield source, target
 
 def yield_token(corpus : list, tokenizer = get_kobart_tokenizer()) -> list:
-    corpus = ["<s> " + line + " <\s>" for line in corpus]
-    full_sentence = " ".join(corpus)
-    return tokenizer(full_sentence, return_tensor = "pt")['input_ids']
+    corpus = ["<s>" + line + "</s>" for line in corpus]
+    full_sentence = "".join(corpus)
+    return tokenizer(full_sentence)['input_ids']
 
 def collat_batch(batch):
+    pad_id = 3
     source_max_len = 4096
     target_max_len = 512
     batch_size = len(batch)
 
-    source_tensor = torch.zeros(batch_size, source_max_len, dtype = torch.int64)
-    target_tensor = torch.zeros(batch_size, target_max_len, dtype = torch.int64)
+    source_tensor = torch.full(size = (batch_size, source_max_len), fill_value = pad_id, dtype = torch.int64, requires_grad = False)
+    target_tensor = torch.full(size = (batch_size, target_max_len), fill_value = pad_id, dtype = torch.int64, requires_grad = False)
     
     for num, (source, target) in enumerate(batch):
-        source_preprocessed = torch.tensor(yield_token(source))
+        source_preprocessed = torch.tensor(yield_token(source), requires_grad = False)
         source_len = len(source_preprocessed)
         if source_len > source_max_len :
             print("source 문장의 토큰 수가 4096을 넘습니다.")
-        source_tensor[num, :source_len] = source_preprocessed
+        source_tensor[num, :source_len] = source_preprocessed[:source_len]
 
-        target_preprocessed = torch.tensor(yield_token(target))
+        target_preprocessed = torch.tensor(yield_token(target), requires_grad = False)
         target_len = len(target_preprocessed)
         if target_len > target_max_len :
             print("target 문장의 토큰 수가 512를 넘습니다.")
-        target_tensor[num, :target_len] = target_preprocessed
+        target_tensor[num, :target_len] = target_preprocessed[:target_len]
     return source_tensor, target_tensor
 
 def worker_init_fn(_):
@@ -70,3 +72,10 @@ data_loader = iter(data_loader)
 print(next(data_loader))
 """
 
+from torch.utils.data import DataLoader
+data = iterableDataset()
+data_loader = DataLoader(data, batch_size = 4, collate_fn = collat_batch)
+data_loader = iter(data_loader)
+x, y = next(data_loader)
+print(x)
+print(y)
