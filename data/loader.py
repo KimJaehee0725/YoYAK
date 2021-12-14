@@ -8,7 +8,7 @@ from torch.nn.utils.rnn import pad_sequence
 """
 todo 
 1. pad_sequence의 길이를 ToBigBird의 최대길이(4096)으로 맞추기 o
-2. SOS, EOS 토큰 위치 확인해서 넣기 (현재 맨 앞에 CLS 토큰(2)이 들어가고 있음) 
+2. SOS, EOS 토큰 위치 확인해서 넣기
 3. iterabledataset multiprocessing 시 문제생기지 않는지 확인하기 o
 """
 
