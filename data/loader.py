@@ -8,7 +8,7 @@ from torch.nn.utils.rnn import pad_sequence
 """
 todo 
 1. pad_sequence의 길이를 ToBigBird의 최대길이(4096)으로 맞추기 o
-2. SOS, EOS 토큰 위치 확인해서 넣기
+2. SOS, EOS 토큰 위치 확인해서 넣기 (현재 맨 앞에 CLS 토큰(2)이 들어가고 있음) 
 3. iterabledataset multiprocessing 시 문제생기지 않는지 확인하기 o
 """
 
@@ -26,8 +26,9 @@ class iterableDataset(IterableDataset):
                 yield source, target
 
 def yield_token(corpus : list, tokenizer = get_kobart_tokenizer()) -> list:
+    corpus = ["<s> " + line + " <\s>" for line in corpus]
     full_sentence = " ".join(corpus)
-    return tokenizer(full_sentence)['input_ids']
+    return tokenizer(full_sentence, return_tensor = "pt")['input_ids']
 
 def collat_batch(batch):
     source_max_len = 4096
