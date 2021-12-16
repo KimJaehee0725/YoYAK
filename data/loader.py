@@ -9,10 +9,16 @@ from torch.nn.utils.rnn import pad_sequence
 todo 
 1. pad_sequence의 길이를 ToBigBird의 최대길이(4096)으로 맞추기 o
 2. iterabledataset multiprocessing 시 문제생기지 않는지 확인하기 o
+
 3. SOS, EOS 토큰 위치 확인해서 넣기 (완료된듯...? 확신이 없음)
     => source의 경우 문장마다 <s>sentence</s> 로 넣으면 되고, target의 경우엔 </s>sentence</s>로 넣으면 됨. 
     이유는 https://stackoverflow.com/questions/64904840/why-we-need-a-decoder-start-token-id-during-generation-in-huggingface-bart 참고
-    다만 target에서 매 sentence마다 </s>로 시작하는지는 확신이 없음. 페가수스 관련 코드 찾아봐야 할듯. 
+    다만 Bart는 encoder와 decoder에 한 문장만 입력하기 때문에, target에서 매 sentence마다 </s>로 시작하는지는 확신이 없음.
+3-1. pegasus tokenizer 결과를 한번 보기.
+    관련 링크 : https://github.com/huggingface/transformers/issues/11541
+    output을 살펴보니 sentece1.<n>sentence2.<n> 이런 식으로 나옴. 근데 아마 \n 대신에 저걸 쓴듯
+    additional unk 토큰들이 있으니까 이걸 이용해서 우리 나름대로 꾸려봐야 할 듯.
+
 4. mask 토큰이 기존에는 token 단위인데, 우린 sentence 단위로 masking하고 있어서 다를 수 있음. 이를 해결하기 위해 새로운 토큰으로 mask_new 토큰을 만들어야 하는지 고민해보기. 
 """
 
@@ -30,12 +36,12 @@ class iterableDataset(IterableDataset):
                 yield source, target
 
 def yield_source(corpus : list, tokenizer = get_kobart_tokenizer()) -> list:
-    corpus = ["<s>" + line + "</s>" for line in corpus]
+    corpus = ["<s>" + line.replace("<mask>", "<unused0>") + "</s>" for line in corpus]
     full_sentence = "".join(corpus)
     return tokenizer(full_sentence)['input_ids']
 
 def yield_target(corpus : list, tokenizer = get_kobart_tokenizer()) -> list:
-    corpus = ["</s>" + line + "</s>" for line in corpus]
+    corpus = ["</s>" + line.replace("<mask>", "<unused0>") + "</s>" for line in corpus]
     full_sentence = "".join(corpus)
     return tokenizer(full_sentence)['input_ids']
 
