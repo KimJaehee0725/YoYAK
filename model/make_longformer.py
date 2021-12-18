@@ -102,6 +102,7 @@ class LongformerBartConfig(BartConfig):
 
 
 if __name__ == '__main__':
+    # Longformer weight 만드는 코드
 	max_pos = 4104
 	max_seq_len = 4096
 	attention_window = 512
@@ -116,7 +117,6 @@ if __name__ == '__main__':
 
 	config.attention_probs_dropout_prob = config.attention_dropout
 	config.architectures = ['LongformerEncoderDecoderForConditionalGeneration', ]
-
 
 	# Tokenizer의 max_positional_embedding_size 확장
 	# extend position embeddings

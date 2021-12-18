@@ -15,9 +15,9 @@ from make_longformer import *
 from transformers import PreTrainedTokenizerFast
 
 # Dataset이 넘겨줘야할 것들
-# inputs : encoder_inputs : encoder input_ids, attention_mask
-# inputs : decoder input_ids, attention_mask
-# label : input_ids 
+# encoder_inputs : token_ids, attention_mask
+# decoder_inputs : token_ids, attention_mask
+# label : token_ids 
 
 class LongformerSummaryModule(pl.LightningDataModule):
     def __init__(self, train_file:str, valid_file:str, test_file:str, tokenizer_path:str, batch_size: int=8, num_workers: int=5):
@@ -60,7 +60,6 @@ class LongformerKobart(pl.LightningModule):
         self.pad_token_id = 3
         self.ignore_token_id= -100
 
-    # 어떤식으로 Input 넘겨서 받를지 확인하기
     def forward(self, inputs):
         encoder_inputs, decoder_inputs, labels = inputs
 
@@ -70,7 +69,7 @@ class LongformerKobart(pl.LightningModule):
                           decoder_attention_mask=decoder_inputs['attention_mask'],
                           labels=labels['token_ids'], return_dict=True)
     
-    # Use this method to caculate rouge score
+    # Use this method to caculate rouge score and inference
     def generate(self,inputs):
         encoder_inputs, decoder_inputs, labels = inputs
         return self.model.generate(input_ids=encoder_inputs['input_ids'], 
@@ -105,6 +104,7 @@ class LongformerKobart(pl.LightningModule):
     def test_epoch_end(self, outputs):
         self.validation_epoch_end(outputs)
 
+    # 수렴 이상하면 learning rate scheduler 추가하기
     def configure_optimizers(self):
         # Prepare optimizer
         param_optimizer = list(self.model.named_parameters())
@@ -122,7 +122,8 @@ class LongformerKobart(pl.LightningModule):
     @staticmethod
     def add_model_specific_args(parser):
         parser.add_argument("--batch_size", type=int, default=2, help="Batch size")
-        parser.add_argument('--train_file', type=str, default='/ /train.csv', help='train file')
+        
+	parser.add_argument('--train_file', type=str, default='/ /train.csv', help='train file')
         parser.add_argument('--valid_file', type=str, default='/ /valid.csv', help='valid file')
         parser.add_argument('--test_file', type=str, default='/ /test.csv', help='test file')
         
@@ -132,7 +133,8 @@ class LongformerKobart(pl.LightningModule):
         parser.add_argument("--gpus", type=int, default=1, help="Number of gpus. 0 for CPU")
         parser.add_argument("--num_workers", type=int, default=5, help="Number of data loader workers")
         parser.add_argument("--seed", type=int, default=1234, help="Seed")
-        parser.add_argument("--max_epochs", type=int, default=2, help="Number of epochs")
+        
+	parser.add_argument("--max_epochs", type=int, default=2, help="Number of epochs")
         parser.add_argument("--max_output_len", type=int, default=1024, help="maximum num of output length. Used for training and testing")
         parser.add_argument("--max_input_len", type=int, default=4096, help="maximum num of input length. Used for training and testing")
         
@@ -157,8 +159,9 @@ def main(args):
 
     model = LongformerKobart(args)
 
-    # wandb logger 추가하기
     wandb_logger = WandbLogger(project='longformer',name=f'Longformer_testing')
+
+    # Early Stopping 추가하기
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints', filename='{epoch:02d}-{val_loss:.3f}', save_top_k=2, verbose=True, monitor='val_loss', mode='min')
     print(args)
 
