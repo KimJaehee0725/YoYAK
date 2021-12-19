@@ -44,7 +44,7 @@ class iterableDataset(IterableDataset):
                 yield source, target
 
 def yield_source(corpus : list, tokenizer = get_kobart_tokenizer()) -> list:
-    corpus = ["<s>" + line.replace("<mask>", "<unused0>") + "</s>" for line in corpus]
+    corpus = [line.replace("<mask>", "<unused0>") + "</s>" for line in corpus]
     full_sentence = "".join(corpus)
     return tokenizer(full_sentence)['input_ids']
 
