@@ -23,9 +23,9 @@ from torch.nn.utils.rnn import pad_sequence
 -> unused0 사용
 
 5. special token 사용 & 입력값 형태
--> encoder input : <sos>sentence<eos><pad><pad>...
+-> encoder input : sentence<eos><pad><pad>...
 -> encoder attention mask : 1 1 1 1 1 1 0 0 0...
--> decoder input : <eos>sentence<eos><pad><pad><pad>
+-> decoder input : <sos>sentence<eos><pad><pad><pad>
 -> decoder attention mask : 1 1 1 1 1 1 0 0 0 0
 -> label : sentence-100-100-100
 """
