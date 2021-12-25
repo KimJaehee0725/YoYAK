@@ -5,7 +5,7 @@ import numpy as np
 
 import torch
 from torch.utils.data import DataLoader, Dataset
-from transformers.optimization import AdamW
+from transformers.optimization import AdamW, get_linear_schedule_with_warmup
 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
@@ -18,6 +18,16 @@ from transformers import PreTrainedTokenizerFast
 # encoder_inputs : token_ids, attention_mask
 # decoder_inputs : token_ids, attention_mask
 # label : token_ids 
+
+# To Do List
+# 1. 재희형이 만든 데이터로더랑 모델 연결
+# 2. validation step과 test step에 rouge score 계산하는 부분 추가
+# 3. Optimizer select learning rate scheduler 추가 > Done!!
+# - layer normalization parameter도 학습시키는게 맞을까?
+# - 이미 kobart 자체가 요약 데이터셋으로 조금만 fine-tuning해도 성능이 잘 나와서 1 epoch만 돌려도 충분할 거 같음)
+# 4. gradient clipping, amp backend, 같은 technical한 부분 추가할지?
+# 5. Checkpoint 불러올 때 lightening binary > pytorch binary 변환 작업해주는 script file 추가
+# 6. inferene pipeline 만들기
 
 class LongformerSummaryModule(pl.LightningDataModule):
     def __init__(self, train_file:str, valid_file:str, test_file:str, tokenizer_path:str, batch_size: int=8, num_workers: int=5):
@@ -96,8 +106,6 @@ class LongformerKobart(pl.LightningModule):
             losses.append(loss)
         self.log('val_loss', torch.stack(losses).mean(), prog_bar=True)
     
-    # TO DO !
-    # Add rouge score in test step
     def test_step(self, batch, batch_nb):
         return self.validation_step(batch, batch_nb)
 
@@ -107,6 +115,8 @@ class LongformerKobart(pl.LightningModule):
     # 수렴 이상하면 learning rate scheduler 추가하기
     def configure_optimizers(self):
         # Prepare optimizer
+        '''
+
         param_optimizer = list(self.model.named_parameters())
         no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
         optimizer_grouped_parameters = [
@@ -115,15 +125,16 @@ class LongformerKobart(pl.LightningModule):
             {'params': [p for n, p in param_optimizer if any(
                 nd in n for nd in no_decay)], 'weight_decay': 0.0}
         ]
-        optimizer = AdamW(optimizer_grouped_parameters,
-                          lr=self.args.lr, correct_bias=False)
-        return optimizer
+        '''
+        optimizer = AdamW(self.model.parameters(), lr=self.args.lr, correct_bias=True)
+        num_steps = self.args.dataset_size * self.args.max_epochs / args.gpus / self.args.batch_size
+        scheduler = get_linear_schedule_with_warmup(optimizer, num_warmup_steps=self.args.warmup, num_training_steps=num_steps)
+        lr_scheduler = {'scheduler': scheduler,  'monitor': 'loss', 'interval': 'step', 'frequency': 1}
+        return [optimizer], [lr_scheduler] 
 
     @staticmethod
     def add_model_specific_args(parser):
-        parser.add_argument("--batch_size", type=int, default=2, help="Batch size")
-        
-	parser.add_argument('--train_file', type=str, default='/ /train.csv', help='train file')
+        parser.add_argument('--train_file', type=str, default='/ /train.csv', help='train file')
         parser.add_argument('--valid_file', type=str, default='/ /valid.csv', help='valid file')
         parser.add_argument('--test_file', type=str, default='/ /test.csv', help='test file')
         
@@ -134,11 +145,14 @@ class LongformerKobart(pl.LightningModule):
         parser.add_argument("--num_workers", type=int, default=5, help="Number of data loader workers")
         parser.add_argument("--seed", type=int, default=1234, help="Seed")
         
-	parser.add_argument("--max_epochs", type=int, default=2, help="Number of epochs")
+        parser.add_argument("--batch_size", type=int, default=2, help="Batch size")
+        parser.add_argument("--max_epochs", type=int, default=2, help="Number of epochs")
+        parser.add_argument('--lr',type=float,default=1e-7,help='The initial learning rate')
+        parser.add_argument("--warmup", type=int, default=1000, help="Number of warmup steps")
+        
         parser.add_argument("--max_output_len", type=int, default=1024, help="maximum num of output length. Used for training and testing")
         parser.add_argument("--max_input_len", type=int, default=4096, help="maximum num of input length. Used for training and testing")
         
-        parser.add_argument('--lr',type=float,default=1e-7,help='The initial learning rate')
 
         parser.add_argument("--test", action='store_true', help="Test only, no training")
         return parser
@@ -163,15 +177,16 @@ def main(args):
 
     # Early Stopping 추가하기
     checkpoint_callback = ModelCheckpoint(dirpath='checkpoints', filename='{epoch:02d}-{val_loss:.3f}', save_top_k=2, verbose=True, monitor='val_loss', mode='min')
+    args.dataset_size = 203037  # hardcode dataset size. Needed to compute number of steps for the lr scheduler
     print(args)
 
     trainer = pl.Trainer(gpus=args.gpus, 
                         distributed_backend='ddp' if torch.cuda.is_available() else None,
-                        accumulate_grad_batches = 1 # if 4, 4 batch > 16 batch
+                        accumulate_grad_batches = 1 # if 4, 4 batch > 16 batch, 이거 숫자 늘리면 learning_rate scheduler parameter 조정 필요
                         max_epochs=args.max_epochs,
-                        val_check_interval= 0.25, # check check validation set 4 times during a training epoch
+                        val_check_interval= 0.25, # check validation set 4 times during a training epoch
                         check_val_every_n_epoch=1, 
-                        logger=wandb_logger,
+                        logger=wandb_logger
                         checkpoint_callback=checkpoint_callback,
                         gradient_clip_val=0.0 # No gradient clipping,
                         log_every_n_steps=50 # logging frequency in training step,
