@@ -106,7 +106,7 @@ if __name__ == '__main__':
 	max_pos = 4104
 	max_seq_len = 4096
 	attention_window = 512
-	save_path = 'longformer_kobart'
+	save_path = 'longformer_kobart_initial_ckpt'
 
 	# 기존 pretrained 된 kobart tokenizer & model load
 	tokenizer = PreTrainedTokenizerFast.from_pretrained('gogamza/kobart-base-v1', model_max_length=max_pos)
