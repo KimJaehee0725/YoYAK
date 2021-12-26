@@ -23,12 +23,13 @@ from transformers import PreTrainedTokenizerFast
 # 1. 재희형이 만든 데이터로더랑 모델 연결
 # 2. validation step과 test step에 rouge score 계산하는 부분 추가
 # 3. Optimizer select learning rate scheduler 추가 > Done!!
-# - layer normalization parameter도 학습시키는게 맞을까? > No! 우선은 layer normalization parameter도 학습하자
+# - layer normalization parameter도 학습시키는게 맞을까? > Yes! 우선은 layer normalization parameter도 학습하자
 # - 이미 kobart 자체가 요약 데이터셋으로 조금만 fine-tuning해도 성능이 잘 나와서 1 epoch만 돌려도 충분할 거 같음)
 # - learning_rate 값, warming_up step을 언제까지로 할지
 # 4. gradient accumulating, clipping, amp backend, 같은 technical한 부분 추가할지? >> 어느정도 배치 올라가면 accumulating은 하지 말자..
 # 5. Checkpoint 불러올 때 lightening binary > pytorch binary 변환 작업해주는 script file 추가 > Done!
 # 6. inferene pipeline 만들기 > 작업중  .. gpu에 올려서 inference하도록 코드 변경하면 될듯??
+# 7. model.generate hyperparameter 조정 : num_beams, n_gram 중복, 등등..
 
 class LongformerSummaryModule(pl.LightningDataModule):
     def __init__(self, train_file:str, valid_file:str, test_file:str, tokenizer_path:str, batch_size: int=8, num_workers: int=5):
@@ -113,7 +114,6 @@ class LongformerKobart(pl.LightningModule):
     def test_epoch_end(self, outputs):
         self.validation_epoch_end(outputs)
 
-    # 수렴 이상하면 learning rate scheduler 추가하기
     def configure_optimizers(self):
         # Prepare optimizer
         '''
