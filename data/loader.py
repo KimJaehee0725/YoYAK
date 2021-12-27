@@ -55,32 +55,43 @@ def yield_target(corpus : list, tokenizer = get_kobart_tokenizer()) -> list:
 
 def collat_batch(batch):
     pad_id = 3
+    eos_id = 1
     non_attention_value = 0
     not_cal_for_softmax = -100
     source_max_len = 4096
     target_max_len = 1024
     batch_size = len(batch)
 
-    source_token_ids = torch.full(size = (batch_size, source_max_len), fill_value = pad_id, dtype = torch.int, requires_grad = False)
-    source_attention_masks = torch.full(size = (batch_size, source_max_len), fill_value = non_attention_value, dtype = torch.int, requires_grad = False)
+    source_token_ids = torch.full(size = (batch_size, source_max_len), fill_value = pad_id, requires_grad = False)
+    source_attention_masks = torch.full(size = (batch_size, source_max_len), fill_value = non_attention_value, requires_grad = False)
 
-    target_token_ids = torch.full(size = (batch_size, target_max_len), fill_value = pad_id, dtype = torch.int, requires_grad = False)
-    target_attention_masks = torch.full(size = (batch_size, target_max_len), fill_value = non_attention_value, dtype = torch.int, requires_grad = False)
+    target_token_ids = torch.full(size = (batch_size, target_max_len), fill_value = pad_id,  requires_grad = False)
+    target_attention_masks = torch.full(size = (batch_size, target_max_len), fill_value = non_attention_value,  requires_grad = False)
     
-    label_token_ids = torch.full((batch_size, target_max_len), fill_value = not_cal_for_softmax, dtype = torch.int, requires_grad = False)
+    label_token_ids = torch.full((batch_size, target_max_len), fill_value = not_cal_for_softmax,  requires_grad = False)
     
     for num, (source, target) in enumerate(batch):
         source_preprocessed = torch.tensor(yield_source(source), requires_grad = False)
         source_len = len(source_preprocessed)
         if source_len > source_max_len :
+
             print(f"source 문장의 토큰 수가 {source_max_len}을 넘습니다.")
+            source_preprocessed = source_preprocessed[:source_max_len]
+            source_preprocessed[source_max_len-1] = eos_id
+            source_len = len(source_preprocessed)
+            
         source_token_ids[num, :source_len] = source_preprocessed[:source_len]
         source_attention_masks[num, :source_len] = 1
 
         target_preprocessed = torch.tensor(yield_target(target), requires_grad = False)
         target_len = len(target_preprocessed)
+
         if target_len > target_max_len :
             print(f"target 문장의 토큰 수가 {target_max_len}를 넘습니다.")
+            target_preprocessed = target_preprocessed[:target_max_len]
+            target_preprocessed[target_max_len-1] = eos_id
+            target_len = len(target_preprocessed)
+
         target_token_ids[num, :target_len] = target_preprocessed[:target_len]
         target_attention_masks[num, :target_len] = 1
 
