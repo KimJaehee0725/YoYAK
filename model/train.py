@@ -12,6 +12,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 
 from make_longformer import *
+from data.loader import *
 from transformers import PreTrainedTokenizerFast
 
 # Dataset이 넘겨줘야할 것들
@@ -20,19 +21,19 @@ from transformers import PreTrainedTokenizerFast
 # label : token_ids 
 
 # To Do List
-# 1. 재희형이 만든 데이터로더랑 모델 연결
+# 1. 재희형이 만든 데이터로더랑 모델 연결 > Done!
 # 2. validation step과 test step에 rouge score 계산하는 부분 추가
-# 3. Optimizer select learning rate scheduler 추가 > Done!!
+# 3. Optimizer select learning rate scheduler 추가 > Done!
 # - layer normalization parameter도 학습시키는게 맞을까? > Yes! 우선은 layer normalization parameter도 학습하자
 # - 이미 kobart 자체가 요약 데이터셋으로 조금만 fine-tuning해도 성능이 잘 나와서 1 epoch만 돌려도 충분할 거 같음)
 # - learning_rate 값, warming_up step을 언제까지로 할지
-# 4. gradient accumulating, clipping, amp backend, 같은 technical한 부분 추가할지? >> 어느정도 배치 올라가면 accumulating은 하지 말자..
+# 4. gradient accumulating, clipping, amp backend, 같은 technical한 부분 추가할지? >> 어느정도 배치 올라가면 accumulating은 하지 말자.. > Done!
 # 5. Checkpoint 불러올 때 lightening binary > pytorch binary 변환 작업해주는 script file 추가 > Done!
 # 6. inferene pipeline 만들기 > 작업중  .. gpu에 올려서 inference하도록 코드 변경하면 될듯??
-# 7. model.generate hyperparameter 조정 : num_beams, n_gram 중복, 등등..
+# 7. model.generate hyperparameter 조정 : num_beams, n_gram 중복, 등등.. 
 
 class LongformerSummaryModule(pl.LightningDataModule):
-    def __init__(self, train_file:str, valid_file:str, test_file:str, tokenizer_path:str, batch_size: int=8, num_workers: int=5):
+    def __init__(self, train_file:str, valid_file:str, test_file:str, tokenizer_path:str, batch_size: int=16, num_workers: int=5):
         super().__init__()
         self.batch_size = batch_size
         self.train_file_path = train_file
@@ -49,15 +50,15 @@ class LongformerSummaryModule(pl.LightningDataModule):
         self.test = iterableDataset(self.test_file_path)
 
     def train_dataloader(self):
-        train = DataLoader(self.train, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=True)
+        train = DataLoader(self.train, batch_size = self.batch_size, collate_fn = collat_batch, num_workers = 2, worker_init_fn = worker_init_fn)
         return train
 
     def val_dataloader(self):
-        val = DataLoader(self.test, batch_size=self.batch_size,  num_workers=self.num_workers, shuffle=False)
-        return val
+        valid = DataLoader(self.valid, batch_size = self.batch_size, collate_fn = collat_batch, num_workers = 2, worker_init_fn = worker_init_fn)
+        return valid
 
     def test_dataloader(self):
-        test = DataLoader(self.test, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=False)
+        test = DataLoader(self.test, batch_size = self.batch_size, collate_fn = collat_batch, num_workers = 2, worker_init_fn = worker_init_fn)
         return test
 
 
@@ -135,9 +136,9 @@ class LongformerKobart(pl.LightningModule):
 
     @staticmethod
     def add_model_specific_args(parser):
-        parser.add_argument('--train_file', type=str, default='/ /train.csv', help='train file')
-        parser.add_argument('--valid_file', type=str, default='/ /valid.csv', help='valid file')
-        parser.add_argument('--test_file', type=str, default='/ /test.csv', help='test file')
+        parser.add_argument('--train_file', type=str, default='/ /train.csv', help='train file path')
+        parser.add_argument('--valid_file', type=str, default='/ /valid.csv', help='valid file path')
+        parser.add_argument('--test_file', type=str, default='/ /test.csv', help='test file path')
         
         parser.add_argument("--model_path", type=str, default='longformer_kobart_initial_ckpt', help="Path to the checkpoint directory or model name")
         parser.add_argument("--tokenizer_path", type=str, default='longformer_kobart_initial_ckpt')
@@ -149,7 +150,7 @@ class LongformerKobart(pl.LightningModule):
         parser.add_argument("--batch_size", type=int, default=2, help="Batch size")
         parser.add_argument("--max_epochs", type=int, default=2, help="Number of epochs")
         
-        parser.add_argument('--lr',type=float,default=1e-7,help='The initial learning rate')
+        parser.add_argument('--lr',type=float,default=0.00003,help='The initial learning rate')
         parser.add_argument("--warmup", type=int, default=1000, help="Number of warmup steps")
         
         parser.add_argument("--max_output_len", type=int, default=1024, help="maximum num of output length. Used for training and testing")
@@ -177,23 +178,24 @@ def main(args):
     model = LongformerKobart(args)
 
     # args.default_root_dir : logs
-    wandb_logger = WandbLogger(project='longformer_kobart',name=f'Longformer_testing')
+    wandb_logger = WandbLogger(project='longformer_kobart',name=f'Longformer_testing') # 이거는 당사자 편한대로 추가하셔도 되고, 안하셔도 됩니다~
     tb_logger = TensorBoardLogger(os.path.join(args.default_root_dir, 'tb_logs'))
 
     checkpoint_callback = ModelCheckpoint(dirpath=args.default_root_dir, filename='model_chp/{epoch:02d}-{val_loss:.3f}', every_n_train_steps=args.checkpoint_interval, save_top_k=-1, verbose=True, monitor='val_loss', mode='min', save_last=True)
-    args.dataset_size = 203037  # hardcode dataset size. Needed to compute number of steps for the lr scheduler
+    args.dataset_size = 3168498  # hardcode train dataset size. Needed to compute number of steps for the lr scheduler
+    # valid size : 32332 // test size : 32332
     print(args)
 
     trainer = pl.Trainer(gpus=args.gpus, 
                         distributed_backend='ddp' if torch.cuda.is_available() else None,
                         accumulate_grad_batches = 1 # if 4, 4 batch > 16 batch, 이거 숫자 늘리면 learning_rate scheduler parameter 조정 필요
                         max_epochs=args.max_epochs,
-                        val_check_interval= 0.2, # check validation set 4 times during a training epoch
+                        val_check_interval= 0.2, # check validation set 5 times during a training epoch
                         check_val_every_n_epoch=1, 
                         logger=[wandb_logger, tb_logger],
                         callbacks=checkpoint_callback,
                         logger=tb_logger,
-                        gradient_clip_val=0.0 # No gradient clipping,
+                        gradient_clip_val=0.0 # No gradient clipping
                         log_every_n_steps=50 # logging frequency in training step,
                         max_epochs = args.max_epochs)
     if not args.test:
