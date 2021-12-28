@@ -13,9 +13,6 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 
-import sys
-sys.path.append("/Tobigs-TextConf-141516/data") # loader_map_style.py가 있는 path 추가해주기
-
 from make_longformer import *
 from loader_map_style import *
 from transformers import PreTrainedTokenizerFast
@@ -139,12 +136,12 @@ class LongformerKobart(pl.LightningModule):
 
     @staticmethod
     def add_model_specific_args(parser):
-        parser.add_argument('--train_file', type=str, default='/home/fakenews/Tobigs-TextConf-141516/data/toy_data/toy_train.csv', help='train file path') # toy > final 경로변경
-        parser.add_argument('--valid_file', type=str, default='/home/fakenews/Tobigs-TextConf-141516/data/toy_data/toy_valid.csv', help='valid file path') # toy > final 경로변경
-        parser.add_argument('--test_file', type=str, default='/home/fakenews/Tobigs-TextConf-141516/data/toy_data/toy_test.csv', help='test file path') # toy > final 경로변경
+        parser.add_argument('--train_file', type=str, default='./data/toy_data/toy_train.csv', help='train file path') # toy > final 경로변경
+        parser.add_argument('--valid_file', type=str, default='./data/toy_data/toy_valid.csv', help='valid file path') # toy > final 경로변경
+        parser.add_argument('--test_file', type=str, default='./data/toy_data/toy_test.csv', help='test file path') # toy > final 경로변경
         
-        parser.add_argument("--model_path", type=str, default='longformer_kobart_initial_ckpt', help="Path to the checkpoint directory or model name")
-        parser.add_argument("--tokenizer_path", type=str, default='longformer_kobart_initial_ckpt')
+        parser.add_argument("--model_path", type=str, default='./model/longformer_kobart_initial_ckpt', help="Path to the checkpoint directory or model name")
+        parser.add_argument("--tokenizer_path", type=str, default='./model/longformer_kobart_initial_ckpt')
         parser.add_argument("--default_root_dir", type=str, default='logs', help="parent directory of log files")
         
         parser.add_argument("--gpus", type=int, default=4, help="Number of gpus. 0 for CPU")
@@ -160,7 +157,7 @@ class LongformerKobart(pl.LightningModule):
         parser.add_argument("--max_output_len", type=int, default=1024, help="maximum num of output length. Used for training and testing")
         parser.add_argument("--max_input_len", type=int, default=4096, help="maximum num of input length. Used for training and testing")
         
-        parser.add_argument("--checkpoint_interval", type=int, default=300000, help="Number of training steps between checkpoints")
+        parser.add_argument("--checkpoint_interval", type=int, default=300000, help="Number of training steps between checkpoints") # 우선읜 데이터셋의 1/10으로 해놓음
 
         parser.add_argument("--test", action='store_true', help="Test only, no training")
         return parser

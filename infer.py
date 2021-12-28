@@ -2,11 +2,11 @@ from make_longformer import *
 from transformers import PreTrainedTokenizerFast
 
 def load_model():
-    model = LongformerBartForConditionalGeneration.from_pretrained('./longformer_kobart_trained_ckpt')
+    model = LongformerBartForConditionalGeneration.from_pretrained('./model/longformer_kobart_trained_ckpt')
     return model
 
 model = load_model()
-tokenizer = PreTrainedTokenizerFast.from_pretrained('./longformer_kobart_initial_ckpt')
+tokenizer = PreTrainedTokenizerFast.from_pretrained('./model/longformer_kobart_initial_ckpt')
 
 '''
 Inference code
