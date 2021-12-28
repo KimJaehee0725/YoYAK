@@ -1,0 +1,1 @@
+inference 하기 위해 필요한 model의 pytorch binary가 저장되는 directory

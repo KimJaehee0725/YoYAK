@@ -2,6 +2,7 @@ from kobart_transformers import get_kobart_tokenizer
 import torch
 import csv
 from torch.utils.data import DataLoader, Dataset
+from transformers import PreTrainedTokenizerFast
 import ast 
 import csv
 from tqdm import tqdm
@@ -36,12 +37,12 @@ class ToBigsDataset(Dataset) :
     def __len__(self):
         return len(self.data)
 
-def yield_source(corpus : list, tokenizer = get_kobart_tokenizer()) -> list:
+def yield_source(corpus : list, tokenizer = PreTrainedTokenizerFast.from_pretrained('/home/fakenews/Tobigs-TextConf-141516/model/longformer_kobart_initial_ckpt')) -> list:
     corpus = [line.replace("<mask>", "<unused0>") + "</s>" for line in corpus]
     full_sentence = "".join(corpus)
     return tokenizer(full_sentence)['input_ids']
 
-def yield_target(corpus : list, tokenizer = get_kobart_tokenizer()) -> list:
+def yield_target(corpus : list, tokenizer = PreTrainedTokenizerFast.from_pretrained('/home/fakenews/Tobigs-TextConf-141516/model/longformer_kobart_initial_ckpt')) -> list:
     corpus = ["</s>" + line.replace("<mask>", "<unused0>") + "</s>" for line in corpus]
     full_sentence = "".join(corpus)
     return tokenizer(full_sentence)['input_ids']
