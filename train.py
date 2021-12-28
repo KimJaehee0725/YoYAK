@@ -55,14 +55,15 @@ class LongformerSummaryModule(pl.LightningDataModule):
         self.test = ToBigsDataset(self.test_file_path)
 
     def train_dataloader(self):
-        train = DataLoader(self.train, batch_size = self.batch_size, collate_fn = collat_batch, drop_last = True)
+        train = DataLoader(self.train, batch_size = self.batch_size, collate_fn = collat_batch, num_workers = self.num_workers)
+        return train
 
     def val_dataloader(self):
-        valid = DataLoader(self.valid, batch_size = self.batch_size, collate_fn = collat_batch, drop_last = True)
+        valid = DataLoader(self.valid, batch_size = self.batch_size, collate_fn = collat_batch, num_workers = self.num_workers)
         return valid
 
     def test_dataloader(self):
-        test = DataLoader(self.test, batch_size = self.batch_size,collate_fn = collat_batch, drop_last = True)
+        test = DataLoader(self.test, batch_size = self.batch_size, collate_fn = collat_batch, num_workers = self.num_workers)
         return test
 
 
@@ -145,7 +146,7 @@ class LongformerKobart(pl.LightningModule):
         parser.add_argument("--default_root_dir", type=str, default='logs', help="parent directory of log files")
         
         parser.add_argument("--gpus", type=int, default=4, help="Number of gpus. 0 for CPU")
-        parser.add_argument("--num_workers", type=int, default=5, help="Number of data loader workers")
+        parser.add_argument("--num_workers", type=int, default=30, help="Number of data loader workers")
         parser.add_argument("--seed", type=int, default=1234, help="Seed")
         
         parser.add_argument("--batch_size", type=int, default=2, help="Batch size") 
