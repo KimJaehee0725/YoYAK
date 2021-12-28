@@ -13,7 +13,7 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
 from pytorch_lightning.loggers import WandbLogger, TensorBoardLogger
 
-from make_longformer import *
+from model.make_longformer import *
 from loader_map_style import *
 from transformers import PreTrainedTokenizerFast
 
@@ -157,7 +157,7 @@ class LongformerKobart(pl.LightningModule):
         parser.add_argument("--max_output_len", type=int, default=1024, help="maximum num of output length. Used for training and testing")
         parser.add_argument("--max_input_len", type=int, default=4096, help="maximum num of input length. Used for training and testing")
         
-        parser.add_argument("--checkpoint_interval", type=int, default=300000, help="Number of training steps between checkpoints") # 우선읜 데이터셋의 1/10으로 해놓음
+        parser.add_argument("--checkpoint_interval", type=int, default=300000, help="Number of training steps between checkpoints") # 우선 데이터셋의 1/10으로 해놓음
 
         parser.add_argument("--test", action='store_true', help="Test only, no training")
         return parser
@@ -187,7 +187,7 @@ def main(args):
                         accelerator='ddp' if torch.cuda.is_available() else None,
                         accumulate_grad_batches = 1,  # if 4, 4 batch > 16 batch, 이거 숫자 늘리면 learning_rate scheduler parameter 조정 필요
                         max_epochs=args.max_epochs,
-                        check_val_every_n_epoch=0.1, # validation 몇번마다 돌릴것인지? > 0.1 epoch에 1번
+                        val_check_interval=0.1, # validation 몇번마다 돌릴것인지? > 0.1 epoch에 1번
                         logger=[wandb_logger,tb_logger],
                         callbacks=checkpoint_callback,
                         gradient_clip_val=0.0, # No gradiet clipping
