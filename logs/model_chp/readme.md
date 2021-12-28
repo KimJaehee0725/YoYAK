@@ -1,1 +1,0 @@
-model checkpoint들이 저장될 directory
