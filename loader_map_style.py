@@ -6,6 +6,15 @@ import ast
 import csv
 from tqdm import tqdm
 
+"""
+how to use
+-------------------------------------------
+dataset = ToBigsDataset()
+data_loader = DataLoader(dataset, batch_size = 4, collate_fn = collat_batch, drop_last = True)
+data_loader = iter(data_loader)
+print(next(data_loader))
+"""
+
 class ToBigsDataset(Dataset) :
     def __init__(self,  path = "G:/공유 드라이브/TobigsTextConf 141516/chained/chained_SourceAndTarget.csv") :
         super().__init__()
@@ -109,7 +118,7 @@ def worker_init_fn(_):
 how to use
 -------------------------------------------
 dataset = ToBigsDataset()
-data_loader = DataLoader(dataset, batch_size = 4, collate_fn = collat_batch)
+data_loader = DataLoader(dataset, batch_size = 4, collate_fn = collat_batch, drop_last = True)
 data_loader = iter(data_loader)
 print(next(data_loader))
 """
