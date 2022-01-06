@@ -16,7 +16,7 @@ print(next(data_loader))
 5. special token 사용 & 입력값 형태
 -> encoder input : sentence<eos><pad><pad>...
 -> encoder attention mask : 1 1 1 1 1 1 0 0 0...
--> decoder input : <sos>sentence<eos><pad><pad><pad>
+-> decoder input : <eos>sentence<eos><pad><pad><pad>
 -> decoder attention mask : 1 1 1 1 1 1 0 0 0 0
 -> label : sentence<eos>100100100
 """

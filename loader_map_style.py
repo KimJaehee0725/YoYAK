@@ -31,7 +31,11 @@ class ToBigsDataset(Dataset) :
 
                     pbar.update(1)
     def __getitem__(self, index) :
-        return self.data[index]
+        tmp = self.data[index]
+        if len(tmp) < 100000:
+            return tmp
+        else:
+            return tmp[:100000]
 
     def __len__(self):
         return len(self.data)
