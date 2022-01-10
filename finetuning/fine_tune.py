@@ -1,4 +1,4 @@
-from rouge import Rouge
+# from rouge import Rouge
 import os, sys, argparse, logging
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -33,8 +33,7 @@ class YoYakFinetuningDataModule(pl.LightningDataModule):
         self.train_file_path = args.train_file
         self.valid_file_path = args.valid_file
         self.test_file_path = args.test_file
-        self.tokenizer = PreTrainedTokenizerFast.from_pretrained('gogamza/kobart-base-v1')
-        # self.tokenizer = PreTrainedTokenizerFast.from_pretrained(args.tokenizer_path)
+        self.tokenizer = PreTrainedTokenizerFast.from_pretrained(args.tokenizer_path)
 
     def train_dataloader(self):
         train_dataset = FineTuningDataset(self.tokenizer, self.train_file_path, encoder_max_len = args.max_input_len, decoder_max_len = args.max_output_len)
@@ -55,11 +54,9 @@ class YoYakFinetuningModule(pl.LightningModule):
     def __init__(self, hparams) :
         super().__init__()
         self.save_hyperparameters(hparams)
-        self.model = BartForConditionalGeneration.from_pretrained('gogamza/kobart-base-v1')
-        self.tokenizer = PreTrainedTokenizerFast.from_pretrained('gogamza/kobart-base-v1')
-        # self.model = LongformerBartForConditionalGeneration.from_pretrained(self.hparams.model.path)
-        # self.tokenizer = PreTrainedTokenizerFast.from_pretrained(self.hparams.tokenizer)
-        self.rouge = Rouge()
+        self.model = LongformerBartForConditionalGeneration.from_pretrained(self.hparams.model_path)
+        self.tokenizer = PreTrainedTokenizerFast.from_pretrained(self.hparams.tokenizer_path)
+        # self.rouge = Rouge()
 
     def forward(self, inputs) : 
         encoder_inputs, decoder_inputs, labels, labels_str = inputs
@@ -86,15 +83,17 @@ class YoYakFinetuningModule(pl.LightningModule):
         _, _, _, label_str = batch
         outs = self(batch)
         loss = outs.loss
-        softmax = torch.nn.Softmax(outs)
-        outs_str = self.tokenizer.decode(softmax)
-        rouge_scores = self.rouge.get_scores(outs_str, label_str)
-        #### rouge 함수 output이 scalar가 아님 rouge 1, 2, l 중에 무엇을 쓰고, recall, precision, f1 중에 뭘쓸까?
-        rouge_1 = np.mean((score["rouge-1"]["f"] for score in rouge_scores))
-        rouge_2 = np.mean((score["rouge-2"]["f"] for score in rouge_scores))
-        rouge_L = np.mean((score["rouge-l"]["f"] for score in rouge_scores))
-        metrics = {'test loss': loss, 'rouge 1': rouge_1, 'rouge 2' : rouge_2, 'rouge L' : rouge_L}
-        self.log_dict(metrics, batch_size = self.hparams.batch_size)
+        self.log("test_loss", loss, prog_bar=True, batch_size = self.hparams.batch_size)
+        return loss
+        # softmax = torch.nn.Softmax(outs)
+        # outs_str = self.tokenizer.decode(softmax)
+        # rouge_scores = self.rouge.get_scores(outs_str, label_str)
+        # #### rouge 함수 output이 scalar가 아님 rouge 1, 2, l 중에 무엇을 쓰고, recall, precision, f1 중에 뭘쓸까?
+        # rouge_1 = np.mean((score["rouge-1"]["f"] for score in rouge_scores))
+        # rouge_2 = np.mean((score["rouge-2"]["f"] for score in rouge_scores))
+        # rouge_L = np.mean((score["rouge-l"]["f"] for score in rouge_scores))
+        # metrics = {'test loss': loss, 'rouge 1': rouge_1, 'rouge 2' : rouge_2, 'rouge L' : rouge_L}
+        # self.log_dict(metrics, batch_size = self.hparams.batch_size)
 
     def configure_optimizers(self) :
         optimizer = AdamW(self.model.parameters(), lr = self.hparams.lr, correct_bias = True)
@@ -121,15 +120,12 @@ class YoYakFinetuningModule(pl.LightningModule):
 
     @staticmethod
     def add_model_specific_args(parser):
-        # parser.add_argument('--train_file', type=str, default='./finetune_data/train.csv', help='train file path') 
-        # parser.add_argument('--valid_file', type=str, default='./finetune_data/valid.csv', help='valid file path')
-        # parser.add_argument('--test_file', type=str, default='./finetune_data/test.csv', help='test file path') 
         parser.add_argument('--train_file', type=str, default='./finetune_data/train.csv', help='train file path') 
-        parser.add_argument('--valid_file', type=str, default='./finetune_data/test.csv', help='valid file path')
-        parser.add_argument('--test_file', type=str, default='./finetune_data/test.csv', help='test file path') 
+        parser.add_argument('--valid_file', type=str, default='./finetune_data/valid.csv', help='valid file path')
+        parser.add_argument('--test_file', type=str, default='./finetune_data/test.csv', help='test file path')
         
-        parser.add_argument("--model_path", type=str, default='./model/longformer_kobart_initial_ckpt', help="Path to the checkpoint directory or model name")
-        parser.add_argument("--tokenizer_path", type=str, default='./model/longformer_kobart_initial_ckpt')
+        parser.add_argument("--model_path", type=str, default='../model/longformer_kobart_trained_ckpt', help="Path to the checkpoint directory or model name")
+        parser.add_argument("--tokenizer_path", type=str, default='../model/longformer_kobart_initial_ckpt')
         parser.add_argument("--default_root_dir", type=str, default='logs', help="parent directory of log files")
         
         parser.add_argument("--gpus", type=int, default=1, help="Number of gpus. 0 for CPU")
@@ -176,11 +172,11 @@ def main(args) :
     trainer = pl.Trainer(gpus = args.gpus, 
                     accumulate_grad_batches = 1,  # if 4, 4 batch > 16 batch, 이거 숫자 늘리면 learning_rate scheduler parameter 조정 필요
                     max_epochs=args.max_epochs,
-                    val_check_interval=50, # validation 몇번마다 돌릴것인지? > 0.1 epoch에 1번
                     logger=[wandb_logger,tb_logger],
                     callbacks=checkpoint_callback,
                     gradient_clip_val=10.0, 
-                    log_every_n_steps=10) # logging frequency in training step
+                    log_every_n_steps=10, # logging frequency in training step
+                    val_check_interval=0.1) # validation 몇번마다 돌릴것인지? > 0.1 epoch에 1번) 
 
     if not args.test:
         trainer.fit(model,dm)
@@ -188,6 +184,7 @@ def main(args) :
 
 
 if __name__ == "__main__":
+    print("ver1")
     main_arg_parser = argparse.ArgumentParser(description="YoYak_finetuned")
     parser = YoYakFinetuningModule.add_model_specific_args(main_arg_parser)
     args = parser.parse_args()
