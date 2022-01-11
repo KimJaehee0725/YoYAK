@@ -1,6 +1,6 @@
 import argparse
 
-from infer import summarize_infer
+# from infer import summarize_infer
 from infer_models.load_kobigbird import mask_to_replace
 from infer_models.load_koelectra import mask_overlap_concat, mask_overlap_average
 
@@ -20,8 +20,8 @@ def infer_chain(input_str, masking_model = "overlap_concat", masking_threshold =
 
     mask_restore_infer = mask_to_replace
 
-    summarized_str = summarize_infer(input_str)
-    masked_str = mask_generate_infer(summarized_str, args.masking_threshold)
+    # summarized_str = summarize_infer(input_str)
+    masked_str = mask_generate_infer(input_str, masking_threshold)
     restored_str = mask_restore_infer(masked_str)
     return restored_str 
 
