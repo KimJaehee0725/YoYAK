@@ -3,7 +3,7 @@ import torch
 from model.make_longformer import *
 from transformers import PreTrainedTokenizerFast, BartForConditionalGeneration
 def load_model(model_ckpt, tokenizer_ckpt):
-    if "longformer" in model_ckpt:
+    if "YoYak" in model_ckpt:
         model = LongformerBartForConditionalGeneration.from_pretrained(model_ckpt)
         tokenizer = PreTrainedTokenizerFast.from_pretrained(tokenizer_ckpt)
     else :
