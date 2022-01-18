@@ -52,7 +52,7 @@
 <table>
   <tr align = "center">
     <td align="center"><a href="https://github.com/minjin-jeon"><img src="https://user-images.githubusercontent.com/43404665/149942576-39b308ed-a3fe-442c-8336-4ba6c0cd79b8.jpg" width="175" height="200"><br /><sub><b>MinJin Jun</b></sub></td>
-    <td align="center"><a href="https://github.com/shkim960520"><img src="https://user-images.githubusercontent.com/43404665/149942578-cdc715e9-d02c-46ea-952b-8c67dd24b564.jpg" width="200" height="200"><br /><sub><b>Sanghyun Kim</b></sub></td>
+    <td align="center"><a href="https://github.com/shkim960520"><img src="https://user-images.githubusercontent.com/43404665/149942578-cdc715e9-d02c-46ea-952b-8c67dd24b564.jpg" width="200" height="200"><br /><sub><b>Sanghyeon Kim</b></sub></td>
     <td align="center"><a href="https://github.com/KimJaehee0725"><img src="https://user-images.githubusercontent.com/43404665/149942561-83eb061b-441d-4d73-9e30-f89ac778fb3b.jpg" width="200" height="200"><br /><sub><b>Kim Jaehee</b></sub></td>
   </tr>
 </table>
