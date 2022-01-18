@@ -45,6 +45,7 @@
 ### Reference
 - [KoBART](https://github.com/SKT-AI/KoBART)
 - [KoBART-Summarization](https://github.com/seujung/KoBART-summarization)
+- [KoElectra](https://github.com/monologg/KoELECTRA)
 - [PEGASUS](https://arxiv.org/abs/1912.08777)
 - [Electra](https://arxiv.org/abs/2003.10555)
 - [KoBigBird](https://github.com/monologg/KoBigBird)
