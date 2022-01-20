@@ -34,9 +34,8 @@
 -> 저희 YoYAK 모델이 512 토큰 이상/이하 여부와 관계없이 기존의 KoBART 모델을 abstractive summarization task에 finetuning 시킨 결과보다 더 나은 결과를 보이고 있습니다. 
 
 ### 훈련 모델 파일
-- [KoBART pretrained on Abstractive Summarization](https://drive.google.com/drive/folders/15S4JYbJXz_yMUobccA2cvI4D5kVNgtIs?usp=sharing)
-- [YoYAK](https://drive.google.com/drive/folders/14T2RUwuh_e4ok60nJl2xa6yZWSSMALs8?usp=sharing)
-- 
+- 모델 파일이 필요하시다면 stapers@naver.com 
+
 ### YoYAK 관련 자료
 - YoYAK과 관련된 자세한 사항은 컨퍼런스 자료를 확인해주세요!
 - [Slide](https://drive.google.com/file/d/1rsfD0anCyETIc-Fip4d3zAWCdUlYw75i/view?usp=sharing)
