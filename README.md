@@ -64,7 +64,7 @@
     <td align="center"><a href="https://github.com/gunny97"><img src="https://user-images.githubusercontent.com/43404665/149942570-5ba951a7-7de8-4962-ac09-ded780e3541f.jpg" width="175" height="200"><br /><sub><b>Keonwoo Kim</b></sub></td>
     <td align="center"><a href="https://github.com/hyyoka"><img src="https://user-images.githubusercontent.com/48411097/150095977-95110f22-9e70-447e-802c-06834bcf0c4e.JPG" width="200" height="200"><br /><sub><b>Hyowon Cho</b></sub></td>
     <td align="center"><a href="https://github.com/kimjongwoo-cell"><img src="https://user-images.githubusercontent.com/43404665/149942566-5b5c6d0c-50f0-4733-a6d3-14cd290bb508.jpg" width="200" height="200"><br /><sub><b>Jongwoo Kim</b></sub></td>
-    <td align="center"><a href="https://github.com/Lainshower"><img src="https://user-images.githubusercontent.com/43404665/149942580-f7972e58-f477-4220-9a12-1381b5b4935d.jpg" width="200" height="200"><br /><sub><b>Junwon Chang</b></sub></td>
+    <td align="center"><a href="https://github.com/Lainshower"><img src="https://user-images.githubusercontent.com/43404665/149942580-f7972e58-f477-4220-9a12-1381b5b4935d.jpg" width="200" height="200"><br /><sub><b>Joonwon Jang</b></sub></td>
   </tr>
 </table>
 <table>
