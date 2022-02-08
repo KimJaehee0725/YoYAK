@@ -66,6 +66,12 @@
     <td align="center"><a href="https://github.com/kimjongwoo-cell"><img src="https://user-images.githubusercontent.com/43404665/149942566-5b5c6d0c-50f0-4733-a6d3-14cd290bb508.jpg" width="200" height="200"><br /><sub><b>Jongwoo Kim</b></sub></td>
     <td align="center"><a href="https://github.com/Lainshower"><img src="https://user-images.githubusercontent.com/43404665/149942580-f7972e58-f477-4220-9a12-1381b5b4935d.jpg" width="200" height="200"><br /><sub><b>Joonwon Jang</b></sub></td>
   </tr>
+  <tr>
+    <td align="center"><sub><b>GSG<br>Post Processing</b></sub></td>
+    <td align="center"><sub><b>Longformer<br>Pre Processing(petition)<br>Experiment</b></sub></td>
+    <td align="center"><sub><b>Post Processing<br>Experiment</b></sub></td>
+    <td align="center"><sub><b>Longformer<br>Rouge Score</b></sub></td>
+  </tr>
 </table>
 <table>
   <tr align = "center">
@@ -73,4 +79,8 @@
     <td align="center"><a href="https://github.com/shkim960520"><img src="https://user-images.githubusercontent.com/43404665/149942578-cdc715e9-d02c-46ea-952b-8c67dd24b564.jpg" width="200" height="200"><br /><sub><b>Sanghyeon Kim</b></sub></td>
     <td align="center"><a href="https://github.com/KimJaehee0725"><img src="https://user-images.githubusercontent.com/43404665/149942561-83eb061b-441d-4d73-9e30-f89ac778fb3b.jpg" width="200" height="200"><br /><sub><b>Jaehee Kim</b></sub></td>
   </tr>
+  <tr>
+    <td align="center"><sub><b>Post Processing<br>Pre Processing(모두의 말뭉치)</b></sub></td>
+    <td align="center"><sub><b>Longformer<br>Pre Processing(Wikipedia)</b></sub></td>
+    <td align="center"><sub><b>Model Finetuning<br>Pre Processing(NamuWiki, Petition, Dataloader)<br>Post Processing</b></sub></td>  </tr>
 </table>
