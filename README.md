@@ -70,7 +70,7 @@
     <td align="center"><sub><b>GSG<br>Post Processing</b></sub></td>
     <td align="center"><sub><b>Longformer<br>Pre Processing(petition)<br>Experiment</b></sub></td>
     <td align="center"><sub><b>Post Processing<br>Experiment</b></sub></td>
-    <td align="center"><sub><b>Longformer<br>Rouge Score</b></sub></td>
+    <td align="center"><sub><b>Longformer(model build, training pipeline)<br>Rouge Score</b></sub></td>
   </tr>
 </table>
 <table>
